@@ -28,7 +28,7 @@ public class rocket : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (state == State.Alive)
+        if (state == State.Alive) // da 3lshan lma ymot myyfdlsh mkml ene a2dr al3bb beh , f bystna lhd ma l state trg3 tany tt8yr lel intial
         {
             RespondToThrustInput();
             RespondToRotateInput();
@@ -64,9 +64,7 @@ public class rocket : MonoBehaviour
             state = State.Loading;
             audioSource.Stop();
             audioSource.PlayOneShot(sucess);
-            sucessParticles.Play();
-            
-            print("lol");
+            sucessParticles.Play(); // for particles
             Invoke("LoadNextLevel", 1f);
 
 
@@ -85,7 +83,7 @@ public class rocket : MonoBehaviour
 
     }
 
-    void LoadNextLevel()
+   void LoadNextLevel()
     {
         SceneManager.LoadScene(1);
     }
@@ -128,7 +126,7 @@ public class rocket : MonoBehaviour
     }
     void RespondToRotateInput()
     {
-        rigidbody.freezeRotation = true;
+       
       
         ApplyRotate();
     }
@@ -137,6 +135,7 @@ public class rocket : MonoBehaviour
         void ApplyRotate()
         {
         float rotationSpeed = rcsThrust * Time.deltaTime;
+        rigidbody.freezeRotation = true; // let physics while prerssing the keys be off 
         if (Input.GetKey(KeyCode.A))
             {
                 transform.Rotate(Vector3.forward * rotationSpeed);
@@ -148,7 +147,8 @@ public class rocket : MonoBehaviour
             {
                 transform.Rotate(-Vector3.forward * rotationSpeed);
             }
-        }
+        rigidbody.freezeRotation = false; //;
+    }
    
     
 }
