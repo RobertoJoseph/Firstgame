@@ -12,9 +12,12 @@ public class rocket : MonoBehaviour
     [SerializeField] ParticleSystem sucessParticles;
     [SerializeField] ParticleSystem deathParticles;
     [SerializeField] float LoadLevelDelay = 1f;
+    bool collisionDisabled = false;
+    [SerializeField] GameObject myPrefab;
+  
    
 
-    new Rigidbody rigidbody;
+    public Rigidbody rg;
     AudioSource audioSource;
     enum State { Alive, Dying, Loading };
     State state;
@@ -22,7 +25,7 @@ public class rocket : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        rigidbody = GetComponent<Rigidbody>();
+        
         audioSource = GetComponent<AudioSource>(); // El music ele 7attha dakhlt gwa l audiosource 3lshan anaa 3arfto 3la el AudioSource
 
     }
@@ -30,6 +33,7 @@ public class rocket : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         if (state == State.Alive) // da 3lshan lma ymot myyfdlsh mkml ene a2dr al3bb beh , f bystna lhd ma l state trg3 tany tt8yr lel intial
         {
             RespondToThrustInput();
@@ -38,12 +42,37 @@ public class rocket : MonoBehaviour
 
 
         }
+        if (Debug.isDebugBuild)
+        {
 
+      
+        RespondToDebug();
+    }
+
+}
+
+    
+    private void RespondToDebug()
+    {
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            LoadNextLevel();
+        }
+        else
+        {
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                collisionDisabled = !collisionDisabled;
+
+            }
+        }
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        if (state != State.Alive)
+       
+        
+        if (state != State.Alive||collisionDisabled)
         {
             return;
         }
@@ -67,7 +96,10 @@ public class rocket : MonoBehaviour
             audioSource.Stop();
             audioSource.PlayOneShot(sucess);
             sucessParticles.Play(); // for particles
+         
+            
             Invoke("LoadNextLevel", LoadLevelDelay);
+           
 
 
 
@@ -76,24 +108,51 @@ public class rocket : MonoBehaviour
 
 
         {
+          
             state = State.Dying;
+           
+            
             audioSource.Stop();
+           
             audioSource.PlayOneShot(death);
             thrustParticles.Stop(); // i added it
             deathParticles.Play();
-            Invoke("LoadFirstLevel", LoadLevelDelay); // parameterise time
+         
+          
+
+
+
+            Invoke("LoadSameLevel", LoadLevelDelay);
+           // parameterise time
         }
 
     }
 
-   void LoadNextLevel()
+    void LoadNextLevel()
     {
-        SceneManager.LoadScene(1);
+        int currentScene = SceneManager.GetActiveScene().buildIndex; //previous level
+        print(currentScene);
+
+
+        int nextScene = currentScene + 1; // lgded
+        if (nextScene == SceneManager.sceneCountInBuildSettings) //3add l scenes
+        {
+            nextScene = 0;
+        }
+        SceneManager.LoadScene(nextScene);
     }
-    void LoadFirstLevel()
+    void LoadSameLevel()
     {
-        SceneManager.LoadScene(0);
+        
+        Instantiate(myPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+        
+
+        
+        int currentScsene = SceneManager.GetActiveScene().buildIndex;
+        SceneManager.LoadScene(currentScsene);
+
     }
+    
     void RespondToThrustInput()
 
     {
@@ -104,15 +163,21 @@ public class rocket : MonoBehaviour
         }
         else
         {
-            audioSource.Stop();
-            thrustParticles.Stop();
+            StopApplyingThrust();
         }
 
 
     }
+
+    private void StopApplyingThrust()
+    {
+        audioSource.Stop();
+        thrustParticles.Stop();
+    }
+
     void ApplyThrust()
     {
-        rigidbody.AddRelativeForce(Vector3.up * mainThrust*Time.deltaTime); //frame rate inpendent
+        rg.AddRelativeForce(Vector3.up * mainThrust*Time.deltaTime); //frame rate inpendent
         if (!audioSource.isPlaying)
         {
             audioSource.PlayOneShot(thrust);
@@ -132,25 +197,26 @@ public class rocket : MonoBehaviour
        
       
         ApplyRotate();
+        
     }
 
 
-        void ApplyRotate()
-        {
-        float rotationSpeed = rcsThrust * Time.deltaTime;
-        rigidbody.freezeRotation = true; // let physics while prerssing the keys be off 
-        if (Input.GetKey(KeyCode.A))
+      void ApplyRotate()
+      {
+      float rotationSpeed = rcsThrust * Time.deltaTime;
+        rg.angularVelocity = Vector3.zero; //remove rotation due to physics
+      if (Input.GetKey(KeyCode.A))
+          {
+             transform.Rotate(Vector3.forward * rotationSpeed);
+          }
+
+
+
+          if (Input.GetKey(KeyCode.D))
             {
-                transform.Rotate(Vector3.forward * rotationSpeed);
+                transform.Rotate(-Vector3.forward * rotationSpeed); //rule of left and hand
             }
-
-
-
-            if (Input.GetKey(KeyCode.D))
-            {
-                transform.Rotate(-Vector3.forward * rotationSpeed);
-            }
-        rigidbody.freezeRotation = false; //;
+        
     }
    
     
